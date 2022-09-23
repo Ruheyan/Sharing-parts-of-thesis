@@ -1,1 +1,1 @@
-# Sharing-parts-of-thesis-
+# Sharing parts of thesis
