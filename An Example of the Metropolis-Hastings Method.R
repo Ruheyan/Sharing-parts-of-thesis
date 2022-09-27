@@ -1,15 +1,15 @@
 ### Basic MCMC example 
 #s={0,1,2,3,4,...}
-#pi(s)=z^s(1-z)   Stationary distribution
+#pi(s)=z^s(1-z)   Stationary distribution (Target distribution)
 #p(s,s+1)=1/2
 #p(s,s-1)=1/2
 
-set.seed(2)
+set.seed(6)
 
-z <- 0.5
+z <- 0.85
 
-N<-10000
-s0<-50
+N<-10000      #iterations of MCMC 10000
+s0<-1          #initial state (starting point)
 
 out<-numeric(N)
 out[1]<-s0
@@ -29,7 +29,7 @@ for (t in 2:N){
     out[t] <- s
   }
 }
-plot.ts(out,ylab="s")
+plot.ts(out,ylab="s",ylim=c(0,50))
 
 hist(out,xlab = "s",main = " ",probability=TRUE,breaks=seq(-0.5,60.5,by=1),xlim=c(0,20))#target distribution
 e <- numeric(101)
@@ -38,14 +38,12 @@ for (i in 0:100) {
 }
 lines(0:100, e,col="red",lwd=1.5)
 
-acf(out[500:N],main=" ")
-
-out2<- out[500:N]
+acf(out,main=" ")
 
 
 pdf("MetropolisExampleTS.pdf",width = 5,height= 3.5)
 par(mar = c(4, 4, 2, 2),xaxs= "r",yaxs  = "r",cex.axis = 1,cex.lab  = 1)
-plot.ts(out,ylab="s")
+plot.ts(out,ylab="s",ylim=c(0,50))
 dev.off()
 
 pdf("MetropolisExampleHistogram.pdf",width = 5,height= 3.5)
@@ -66,3 +64,8 @@ dev.off()
 (var.out<-var(out2) )
 (mean.geo<-z/(1-z) )
 (var.geo<-z/((1-z)^2) )
+
+
+
+
+
