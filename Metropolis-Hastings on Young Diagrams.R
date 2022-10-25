@@ -1,10 +1,11 @@
 #MCMC on Young Diagrams                          #integer of partitions
 library(partitions)
-set.seed(6) #6 gives good histogram
+set.seed(10) #6 gives good histogram
 
-z<-0.85               #or P(n-1)/P(n) 
+n <- 120 
+z<- exp(-pi/sqrt(6*n)) #1- pi/sqrt(6*n)  #0.8796291   #or P(n-1)/P(n)  
 
-N<-500000            #iterations of MCMC
+N<-500000          #iterations of MCMC
 lambda.start<-c(1)   #initial state (starting point)
 
 #some functions 
@@ -49,6 +50,8 @@ lambda.abs<-matrix(0,nrow =N , ncol=1 )
 lambda.abs[1,]<-sum(lambda.start)
 lambda.parts<-matrix(0,nrow =N , ncol=1 )
 lambda.parts[1,]<-length(lambda.start)
+lambda.largest<-matrix(0,nrow =N , ncol=1 )
+lambda.largest[1,]<-max(lambda.start)
 rho<-c()
 for (t in 2:N){
   s <- lambda[[t-1]]
@@ -82,7 +85,7 @@ for (t in 2:N){
       b<-sample(c(0,1),1)
       if (b==1){
         rho=c(1)
-        alpha<-1
+        alpha<-z
         u<-runif(1,0,1)
         if (u<=alpha){
           lambda[[t]]<-rho
@@ -103,10 +106,11 @@ for (t in 2:N){
   }
   lambda.abs[t]<-sum(lambda[[t]])
   lambda.parts[t]<-length(lambda[[t]])
+  lambda.largest[t]<-max(lambda[[t]])
 }
 
 mean(lambda.abs)
-plot.ts(lambda.abs,ylim=c(-20,200), ylab=expression(abs(lambda)))
+plot.ts(lambda.abs,ylim=c(-20,300), ylab=expression(abs(lambda)))
 
 hist(lambda.abs, probability = TRUE, 
      col="grey",
@@ -122,13 +126,16 @@ for (i in 1:length(ll)) {
 }
 lines(ll, e/sum(e), col="red", lwd=1.5)
 
-acf(lambda.abs, main="")
 
+acf(lambda.abs, main="")
+lag <- 1:N
+lambda.abs.newlag<-lambda.abs[lag[which(lag%% 10==1)]]
+acf(lambda.abs.newlag,main=" ", ylim=c(0,1))
 
 
 pdf("MHYDTs.pdf",width = 5,height= 3.5)
 par(mar = c(4, 4, 2, 2),xaxs= "r",yaxs  = "r",cex.axis = 1,cex.lab  = 1)
-plot.ts(lambda.abs,ylim=c(-20,200), ylab=expression(abs(lambda)))
+plot.ts(lambda.abs,ylim=c(-20,300), ylab=expression(abs(lambda)))
 dev.off()
 
 pdf("MHYDHistogram.pdf",width = 5,height= 3.5)
@@ -144,9 +151,67 @@ dev.off()
 
 pdf("MHYDAcf.pdf",width = 5,height= 3.5)
 par(mar = c(4, 4, 2, 2),xaxs= "r",yaxs  = "r",cex.axis = 1,cex.lab  = 1)
-acf(lambda.abs)
+acf(lambda.abs.newlag,main=" ", ylim=c(0,1))
 dev.off()
 
 
 (mean(lambda.abs))
 (var(lambda.abs))
+
+#### for the length of partitions
+
+plot.ts(lambda.parts, ylab="M", main=" ",ylim=c(-10,90))
+hist(lambda.parts, probability = TRUE, col="grey",
+     breaks=seq(-0.5, max(lambda.parts)+1, by=1), main="Histogram of M",xlab="M")
+lambda.parts.newlag<-lambda.parts[lag[which(lag%% 10==1)]]
+acf(lambda.parts)
+acf(lambda.parts.newlag)
+
+
+pdf("MHYDpartsTs.pdf",width = 5,height= 3.5)
+par(mar = c(4, 4, 2, 2),xaxs= "r",yaxs  = "r",cex.axis = 1,cex.lab  = 1)
+plot.ts(lambda.parts, ylab="M", main=" ",ylim=c(-10,90))
+dev.off()
+
+pdf("MHYDpartsHistogram.pdf",width = 5,height= 3.5)
+par(mar = c(4, 4, 2, 2),xaxs= "r",yaxs  = "r",cex.axis = 1,cex.lab  = 1)
+hist(lambda.parts, probability = TRUE, col="grey",
+     breaks=seq(-0.5, max(lambda.parts)+1, by=1), main="Histogram of M",xlab="M")
+dev.off()
+
+
+pdf("MHYDpartsAcf.pdf",width = 5,height= 3.5)
+par(mar = c(4, 4, 2, 2),xaxs= "r",yaxs  = "r",cex.axis = 1,cex.lab  = 1)
+acf(lambda.parts.newlag)
+dev.off()
+
+
+
+#### for the largest part
+plot.ts(lambda.largest,ylim=c(-5,75))
+hist(lambda.largest,probability = TRUE, col="grey", 
+     breaks = seq(-0.5,max(lambda.largest)+1,by=1))
+acf(lambda.largest)
+
+
+
+
+library(squash)
+#hist2(lambda.parts, lambda.abs,zlab = "Counts",colFn =grayscale, xlab="M", ylab=expression(abs(lambda)),breaks = pretty,key=NULL) 
+
+#colFn can be heat, jet, rainbow,grayscale
+#breaks can be pretty or prettyLog
+
+#lines(2.5651^(-1)*sqrt(lambda.abs)*log(lambda.abs)+0.2*sqrt(lambda.abs),lambda.abs,col="red")
+
+hist2(lambda.abs,lambda.parts ,zlab = "Counts",colFn =grayscale, 
+      ylab="M", xlab=expression(abs(lambda)),breaks = pretty,key=NULL) 
+lines(lambda.abs,2.5651^(-1)*sqrt(lambda.abs)*log(lambda.abs)+0.1*sqrt(lambda.abs),col="red")
+
+
+pdf("PartsandAbsHist.pdf",width = 5,height= 3.5)
+par(mar = c(4, 4, 2, 2),xaxs= "r",yaxs  = "r",cex.axis = 1,cex.lab  = 1)
+hist2(lambda.abs,lambda.parts ,zlab = "Counts",colFn =grayscale, 
+      ylab="M", xlab=expression(abs(lambda)),breaks = pretty,key=NULL) 
+lines(lambda.abs,2.5651^(-1)*sqrt(lambda.abs)*log(lambda.abs)+0.1*sqrt(lambda.abs),col="red")
+dev.off()
